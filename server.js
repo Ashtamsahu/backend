@@ -11,7 +11,6 @@ app.use(express.json());
 // CONNECT ROUTES  
 app.use("/api/v1", productRoutes);   // IMPORTANT FIX
 
-// const MONGO_URL = "mongodb+srv://ashtamsahu2003_db_user:BhRty6WaogWT4Zvx@cluster0.bezhslc.mongodb.net/?appName=Cluster0";
 
 mongoose
   .connect(process.env.MONGO_URL)
