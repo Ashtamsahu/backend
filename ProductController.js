@@ -28,17 +28,84 @@ const service = require("./productService");
 
 /* ------------------------- REGISTER ------------------------- */
 exports.register = async (req, res) => {
-  const response = await service.registerUser(req.body);
-  return res.json(response);
+  try {
+    const { name, email, password } = req.body;
+
+    if (!name || !email || !password) {
+      return res.status(400).json({ 
+        status: false, 
+        message: "Name, email, and password are required" 
+      });
+    }
+
+    const response = await service.registerUser(req.body);
+
+    if (response.status === false) {
+      return res.status(409).json(response); // 409 Conflict for duplicate
+    }
+
+    return res.status(201).json(response); // 201 Created for success
+  } catch (error) {
+    console.error("Register error:", error);
+    return res.status(500).json({ 
+      status: false, 
+      message: "Registration failed", 
+      error: error.message 
+    });
+  }
 };
 
 /* ------------------------- LOGIN ------------------------- */
 exports.login = async (req, res) => {
-  const { email, password } = req.body;
+  try {
+    const { email, password } = req.body;
 
-  const response = await service.loginUser(email, password);
+    if (!email || !password) {
+      return res.status(400).json({ 
+        status: false, 
+        message: "Email and password are required" 
+      });
+    }
 
-  return res.json(response);
+    const response = await service.loginUser(email, password);
+
+    if (response.status === false) {
+      console.log(`Login failed: ${response.message}`);
+      return res.status(401).json(response);
+    }
+
+    // Verify token exists
+    if (!response.token) {
+      console.error("ERROR: Token not generated in login response!");
+      return res.status(500).json({ 
+        status: false, 
+        message: "Token generation failed" 
+      });
+    }
+
+    console.log(`Login successful for: ${email}, Token generated: ${response.token.substring(0, 20)}...`);
+
+    // Success - return token and user info
+    const successResponse = {
+      status: true,
+      message: response.message,
+      token: response.token,
+      user: {
+        id: response.user._id,
+        name: response.user.name,
+        email: response.user.email
+      }
+    };
+
+    return res.status(200).json(successResponse);
+  } catch (error) {
+    console.error("Login controller error:", error);
+    return res.status(500).json({ 
+      status: false, 
+      message: "Server error", 
+      error: error.message 
+    });
+  }
 };
 
 /* ------------ VEG ------------ */
